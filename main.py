@@ -27,7 +27,7 @@ def main():
     try:
         # Notion 토큰 확인
         token = os.environ["NOTION_TOKEN"]
-        if not token.startswith('secret_'):
+        if not token.startswith('rtn_'):
             raise ValueError("Invalid Notion token format")
 
         # 데이터베이스 ID 정리
