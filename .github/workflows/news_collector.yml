@@ -1,4 +1,4 @@
-name: Comprehensive Token Verification
+name: Notion Token Verification
 
 on:
   workflow_dispatch:
@@ -10,27 +10,51 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - name: Ultimate Token Verification
+    - name: Debug Token Information
       env:
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       run: |
-        # 다중 검증 로직
+        # 토큰 존재 여부 확인
         if [ -z "$NOTION_TOKEN" ]; then
-          echo "::error::Token is not set"
+          echo "::error::NOTION_TOKEN is empty"
           exit 1
         fi
-
-        # 접두사 확인
-        if [[ ! "$NOTION_TOKEN" == rtn_* ]]; then
+        
+        # 토큰 길이 출력 (안전하게 토큰 정보 확인)
+        echo "Token length: ${#NOTION_TOKEN}"
+        echo "First 4 characters: ${NOTION_TOKEN:0:4}"
+        
+        # 토큰 검증
+        if [[ ! "$NOTION_TOKEN" =~ ^rtn_ ]]; then
           echo "::error::Token must start with 'rtn_'"
           exit 1
         fi
+        
+        echo "Token verification successful"
 
-        # 토큰 길이 검증
-        TOKEN_LENGTH=${#NOTION_TOKEN}
-        if [ $TOKEN_LENGTH -lt 40 ] || [ $TOKEN_LENGTH -gt 50 ]; then
-          echo "::error::Invalid token length"
-          exit 1
-        fi
+    - name: Verify Token Format
+      if: success()
+      env:
+        NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      run: |
+        # Python을 사용한 검증
+        python3 -c '
+import os
+import sys
 
-        echo "Token verified successfully"
+token = os.environ.get("NOTION_TOKEN", "")
+
+if not token:
+    print("Token is empty")
+    sys.exit(1)
+
+if not token.startswith("rtn_"):
+    print("Token must start with rtn_")
+    sys.exit(1)
+
+if not (40 <= len(token) <= 50):
+    print("Token length is invalid")
+    sys.exit(1)
+
+print("Token format is valid")
+'
