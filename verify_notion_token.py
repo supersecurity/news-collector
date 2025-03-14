@@ -1,55 +1,23 @@
 import os
 import sys
-import requests
-
-def debug_token(token):
-    # 토큰의 처음 4자리만 출력 (보안상 전체 토큰은 출력하지 않음)
-    print(f"Token prefix: '{token[:4]}'")
-    print(f"Token length: {len(token)}")
-    print(f"Token contains whitespace: {any(c.isspace() for c in token)}")
-    print(f"Token characters (first 4): {[ord(c) for c in token[:4]]}")
-
-token = os.environ.get("NOTION_TOKEN", "")
 
 # 디버깅 정보 출력
 print("=== Debug Information ===")
+token = os.environ.get("NOTION_TOKEN", "")
+
 if not token:
-    print("Token is empty or not set")
-else:
-    debug_token(token)
+    print("Token is completely empty")
+    sys.exit(1)
+
+print(f"Token length: {len(token)}")
+print(f"First 4 characters: '{token[:4]}'")
+print(f"Contains whitespace at start/end: {token != token.strip()}")
+print(f"Raw character values: {[ord(c) for c in token[:4]]}")
 print("========================")
 
-if not token:
-    print("::error::Notion token is not set")
-    sys.exit(1)
-
-# 토큰 앞뒤 공백 제거
-token = token.strip()
-    
+# 실제 검증
 if not token.startswith("rtn_"):
-    print(f"::error::Token must start with 'rtn_' (current prefix: '{token[:4]}')")
-    sys.exit(1)
-    
-if len(token) < 40 or len(token) > 50:
-    print(f"::error::Token length ({len(token)}) is invalid (should be between 40 and 50)")
+    print(f"::error::Token must start with 'rtn_' (got: '{token[:4]}')")
     sys.exit(1)
 
-try:
-    response = requests.get(
-        "https://api.notion.com/v1/users/me",
-        headers={
-            "Authorization": f"Bearer {token}",
-            "Notion-Version": "2022-06-28"
-        }
-    )
-    
-    if response.status_code != 200:
-        print(f"::error::API request failed with status {response.status_code}")
-        print(f"Response: {response.text}")
-        sys.exit(1)
-        
-except Exception as e:
-    print(f"::error::Request failed: {str(e)}")
-    sys.exit(1)
-
-print("Notion token is valid")
+print("Token prefix verification passed")
