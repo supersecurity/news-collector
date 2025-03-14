@@ -1,50 +1,22 @@
-name: Notion Integration
-
-on:
-  schedule:
-    - cron: '0 */6 * * *'  # 6시간마다 실행
-  workflow_dispatch:        # 수동 실행 가능
-
-jobs:
-  collect:
-    runs-on: ubuntu-latest
+- name: Debug Token Information
+  env:
+    NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+  run: |
+    # 토큰 검증
+    if [ -z "$NOTION_TOKEN" ]; then
+      echo "::error::NOTION_TOKEN is empty"
+      exit 1
+    fi
     
-    steps:
-    - uses: actions/checkout@v3
-
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.9'
-
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install notion-client requests python-dotenv
-
-    - name: Verify Notion Token
-      env:
-        NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-      run: |
-        # 토큰 검증
-        if [ -z "$NOTION_TOKEN" ]; then
-          echo "::error::NOTION_TOKEN is empty"
-          exit 1
-        fi
-        
-        # 토큰 길이 출력
-        echo "Token length: ${#NOTION_TOKEN}"
-        
-        # 토큰 검증
-        if [[ ! "$NOTION_TOKEN" =~ ^rtn_ ]]; then
-          echo "::error::Token must start with 'rtn_'"
-          exit 1
-        fi
-        
-        echo "Token verification successful"
-
-    - name: Run collector
-      env:
-        NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-        NOTION_DATABASE_ID: ${{ secrets.NOTION_DATABASE_ID }}
-      run: python main.py
+    # 토큰 길이 출력
+    echo "Token length: ${#NOTION_TOKEN}"
+    
+    # 토큰 유효성 검사
+    if [[ $NOTION_TOKEN =~ ^rtn_ ]]; then
+      echo "Token starts with 'rtn_'"
+    else
+      echo "::error::Token must start with 'rtn_'"
+      exit 1
+    fi
+    
+    echo "Token verification successful"
