@@ -1,4 +1,4 @@
-name: Notion Token Verification
+name: Comprehensive Token Verification
 
 on:
   workflow_dispatch:
@@ -10,30 +10,27 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
-    
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.9'
-    
-    - name: Advanced Token Verification
+    - name: Ultimate Token Verification
       env:
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       run: |
-        # bash 디버그 모드 활성화
-        set -x
-        
-        # 토큰 검증 상세 로직
-        if [[ -z "${NOTION_TOKEN}" ]]; then
-          echo "::error::NOTION_TOKEN is not set"
+        # 다중 검증 로직
+        if [ -z "$NOTION_TOKEN" ]; then
+          echo "::error::Token is not set"
           exit 1
         fi
-        
-        # 정규식을 사용한 토큰 시작 문자열 확인
-        if [[ ! "${NOTION_TOKEN}" =~ ^rtn_ ]]; then
+
+        # 접두사 확인
+        if [[ ! "$NOTION_TOKEN" == rtn_* ]]; then
           echo "::error::Token must start with 'rtn_'"
           exit 1
         fi
-        
+
+        # 토큰 길이 검증
+        TOKEN_LENGTH=${#NOTION_TOKEN}
+        if [ $TOKEN_LENGTH -lt 40 ] || [ $TOKEN_LENGTH -gt 50 ]; then
+          echo "::error::Invalid token length"
+          exit 1
+        fi
+
         echo "Token verified successfully"
