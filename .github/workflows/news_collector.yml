@@ -1,22 +1,56 @@
-- name: Debug Token Information
-  env:
-    NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-  run: |
-    # 토큰 검증
-    if [ -z "$NOTION_TOKEN" ]; then
-      echo "::error::NOTION_TOKEN is empty"
-      exit 1
-    fi
+name: Notion Token Verification
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
     
-    # 토큰 길이 출력
-    echo "Token length: ${#NOTION_TOKEN}"
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+      
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        
+    - name: Install dependencies
+      run: pip install requests
+        
+    - name: Verify Notion Token
+      env:
+        NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
+      run: |
+        python -c '
+import os
+import sys
+import requests
+
+token = os.environ.get("NOTION_TOKEN", "")
+
+if not token:
+    print("::error::Notion token is not set")
+    sys.exit(1)
     
-    # 토큰 유효성 검사
-    if [[ $NOTION_TOKEN =~ ^rtn_ ]]; then
-      echo "Token starts with 'rtn_'"
-    else
-      echo "::error::Token must start with 'rtn_'"
-      exit 1
-    fi
+if not token.startswith("rtn_"):
+    print("::error::Notion token must start with rtn_")
+    sys.exit(1)
     
-    echo "Token verification successful"
+if len(token) < 40 or len(token) > 50:
+    print("::error::Notion token has an invalid length")
+    sys.exit(1)
+    
+response = requests.get("https://api.notion.com/v1/users", 
+                        headers={"Authorization": f"Bearer {token}",
+                                 "Notion-Version": "2022-06-28"})
+
+if response.status_code != 200:
+    print(f"::error::Notion API request failed with status code {response.status_code}")
+    sys.exit(1)
+
+print("Notion token is valid")
+'
