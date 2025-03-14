@@ -2,8 +2,8 @@ name: News Collector
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # Every 6 hours
-  workflow_dispatch:        # Allow manual triggering
+    - cron: '0 */6 * * *'  # 6시간마다 실행
+  workflow_dispatch:        # 수동 실행 가능
 
 jobs:
   collect:
