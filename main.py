@@ -1,93 +1,48 @@
 import os
-from datetime import datetime
-from notion_client import Client
-import logging
+import sys
+import requests
 
-# 로깅 설정
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
-def validate_notion_token(token):
-    """Notion 토큰 검증"""
-    if not token:
-        raise ValueError("NOTION_TOKEN environment variable is not set")
+def verify_token():
+    token = os.environ.get("NOTION_TOKEN", "")
     
-    if not token.startswith('rtn_'):
-        raise ValueError(
-            "Invalid token format. Token must start with 'rtn_'. "
-            "Please check your token in the Notion settings."
+    # 기본 검증
+    if not token:
+        print("::error::NOTION_TOKEN environment variable is not set")
+        sys.exit(1)
+    
+    # 디버그 정보 (안전하게)
+    print(f"Token starts with: {token[:4]}...")  # rtn_만 표시
+    print(f"Token length: {len(token)}")
+    
+    # 토큰 형식 검증
+    if not token.startswith("rtn_"):
+        print(f"::error::Token prefix invalid. Expected 'rtn_', got '{token[:4]}'")
+        sys.exit(1)
+    
+    # API 요청 테스트
+    try:
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Notion-Version": "2022-06-28",
+            "Content-Type": "application/json"
+        }
+        
+        response = requests.get(
+            "https://api.notion.com/v1/users/me",
+            headers=headers
         )
-    return token
-
-def validate_database_id(database_id):
-    """데이터베이스 ID 검증"""
-    clean_id = database_id.replace('-', '')
-    if len(clean_id) != 32:
-        raise ValueError(f"Invalid database ID length: {len(clean_id)}")
-    return clean_id
-
-def create_notion_client(token):
-    """Notion 클라이언트 생성"""
-    try:
-        return Client(auth=token)
-    except Exception as e:
-        logger.error(f"Failed to create Notion client: {e}")
-        raise
-
-def verify_database_access(client, database_id):
-    """데이터베이스 접근 권한 확인"""
-    try:
-        client.databases.retrieve(database_id)
-        return True
-    except Exception as e:
-        logger.error(f"Database access verification failed: {e}")
-        return False
-
-def create_test_entry(client, database_id):
-    """테스트 데이터 생성"""
-    try:
-        response = client.pages.create(
-            parent={"database_id": database_id},
-            properties={
-                "제목": {"title": [{"text": {"content": "Connection Test"}}]},
-                "내용": {"rich_text": [{"text": {"content": f"Test run - {datetime.now()}"}}]},
-                "날짜": {"date": {"start": datetime.now().strftime("%Y-%m-%d")}}
-                # 필요한 속성에 맞게 수정하세요.
-            }
-        )
-        return response
-    except Exception as e:
-        logger.error(f"Failed to create test entry: {e}")
-        raise
-
-def main():
-    try:
-        # 환경 변수 검증
-        token = os.environ.get("NOTION_TOKEN")
-        database_id = os.environ.get("NOTION_DATABASE_ID")
-
-        logger.info("Validating credentials...")
         
-        # 토큰 및 데이터베이스 ID 검증
-        validated_token = validate_notion_token(token)
-        clean_database_id = validate_database_id(database_id)
-
-        # Notion 클라이언트 생성
-        notion = create_notion_client(validated_token)
-        
-        logger.info("Verifying database access...")
-        if not verify_database_access(notion, clean_database_id):
-            raise Exception("Unable to access the specified database")
-
-        # 테스트 데이터 생성
-        logger.info("Creating test entry...")
-        create_test_entry(notion, clean_database_id)
-        
-        logger.info("Operation completed successfully")
-
+        if response.status_code == 200:
+            print("Token verification successful!")
+            return True
+        else:
+            print(f"::error::API request failed: {response.status_code}")
+            print(f"Response: {response.text}")
+            sys.exit(1)
+            
     except Exception as e:
-        logger.error(f"실행 중 오류 발생: {str(e)}")
-        raise
+        print(f"::error::Request failed: {str(e)}")
+        sys.exit(1)
 
 if __name__ == "__main__":
-    main()
+    verify_token()
