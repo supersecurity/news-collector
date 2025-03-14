@@ -12,9 +12,9 @@ def validate_notion_token(token):
     if not token:
         raise ValueError("NOTION_TOKEN environment variable is not set")
     
-    if not token.startswith('secret_'):
+    if not token.startswith('rtn_'):
         raise ValueError(
-            "Invalid token format. Token must start with 'secret_'. "
+            "Invalid token format. Token must start with 'rtn_'. "
             "Please check your token in the Notion settings."
         )
     return token
@@ -52,6 +52,7 @@ def create_test_entry(client, database_id):
                 "제목": {"title": [{"text": {"content": "Connection Test"}}]},
                 "내용": {"rich_text": [{"text": {"content": f"Test run - {datetime.now()}"}}]},
                 "날짜": {"date": {"start": datetime.now().strftime("%Y-%m-%d")}}
+                # 필요한 속성에 맞게 수정하세요.
             }
         )
         return response
