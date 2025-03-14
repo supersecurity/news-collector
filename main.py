@@ -12,9 +12,9 @@ def validate_notion_token(token):
     if not token:
         raise ValueError("NOTION_TOKEN environment variable is not set")
     
-    if not token.startswith('rtn_'):
+    if not token.startswith('secret_'):
         raise ValueError(
-            "Invalid token format. Token must start with 'rtn_'. "
+            "Invalid token format. Token must start with 'secret_'. "
             "Please check your token in the Notion settings."
         )
     return token
