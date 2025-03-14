@@ -24,8 +24,7 @@ jobs:
     - name: Verify Notion Token
       env:
         NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
-      run: |
-        python -c '
+      run: python verify_notion_token.py
 import os
 import sys
 import requests
