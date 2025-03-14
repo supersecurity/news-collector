@@ -25,8 +25,8 @@ jobs:
     - name: Check Token Format
       run: |
         TOKEN="${{ secrets.NOTION_TOKEN }}"
-        if [[ ! $TOKEN == rtn_* ]]; then
-          echo "Error: NOTION_TOKEN must start with 'rtn_'"
+        if [[ ! $TOKEN == secret_* ]]; then
+          echo "Error: NOTION_TOKEN must start with 'secret_'"
           exit 1
         fi
         echo "Token format verification passed"
