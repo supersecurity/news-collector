@@ -2,8 +2,8 @@ name: News Collector
 
 on:
   schedule:
-    - cron: '0 */6 * * *'  # 6시간마다 실행
-  workflow_dispatch:        # 수동 실행 가능
+    - cron: '0 */6 * * *'  # Every 6 hours
+  workflow_dispatch:        # Allow manual triggering
 
 jobs:
   collect:
@@ -23,9 +23,10 @@ jobs:
         pip install notion-client requests python-dotenv
 
     - name: Check Token Format
+      env:
+        NOTION_TOKEN: ${{ secrets.NOTION_TOKEN }}
       run: |
-        TOKEN="${{ secrets.NOTION_TOKEN }}"
-        if [[ ! $TOKEN == rtn_* ]]; then
+        if [[ ! $NOTION_TOKEN == rtn_* ]]; then
           echo "Error: NOTION_TOKEN must start with 'rtn_'"
           exit 1
         fi
